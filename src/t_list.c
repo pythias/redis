@@ -312,6 +312,27 @@ void pushGenericCommand(redisClient *c, int where) {
     }
     addReplyLongLong(c, waiting + (lobj ? listTypeLength(lobj) : 0));
     if (pushed) {
+        robj *tobj = hashTypeLookupWriteOrCreate(c, shared.totallength);
+        if (tobj) {
+            long long newLength = 0, oldLength;
+            robj *oldObj, *newObj;
+            if ((oldObj = hashTypeGetObject(tobj, c->argv[1])) != NULL) {
+                getLongLongFromObject(oldObj, &newLength);
+                decrRefCount(oldObj);
+            }
+
+            oldLength = newLength;
+            if (pushed > (LLONG_MAX - oldLength)) {
+                newLength = 0;
+            }
+
+            newLength += pushed;
+            newObj = createStringObjectFromLongLong(newLength);
+            hashTypeSet(tobj, c->argv[1], newObj);
+            decrRefCount(newObj);
+            server.dirty++;
+        }
+
         char *event = (where == REDIS_HEAD) ? "lpush" : "rpush";
 
         signalModifiedKey(c->db,c->argv[1]);
@@ -407,6 +428,19 @@ void llenCommand(redisClient *c) {
     robj *o = lookupKeyReadOrReply(c,c->argv[1],shared.czero);
     if (o == NULL || checkType(c,o,REDIS_LIST)) return;
     addReplyLongLong(c,listTypeLength(o));
+}
+
+void ltlenCommand(redisClient *c) {
+    robj *o = lookupKeyReadOrReply(c, shared.totallength, shared.czero);
+    if (o == NULL || checkType(c,o,REDIS_HASH)) return;
+    
+    robj *value;
+    long long totalLength;
+    if ((value = hashTypeGetObject(o, c->argv[1])) != NULL) {
+        getLongLongFromObject(value, &totalLength);
+        decrRefCount(value);
+    }
+    addReplyLongLong(c, totalLength);
 }
 
 void lindexCommand(redisClient *c) {

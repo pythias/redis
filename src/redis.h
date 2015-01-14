@@ -560,7 +560,7 @@ struct sharedObjectsStruct {
     *masterdownerr, *roslaveerr, *execaborterr, *noautherr, *noreplicaserr,
     *busykeyerr, *oomerr, *plus, *messagebulk, *pmessagebulk, *subscribebulk,
     *unsubscribebulk, *psubscribebulk, *punsubscribebulk, *del, *rpop, *lpop,
-    *lpush, *emptyscan, *minstring, *maxstring,
+    *lpush, *emptyscan, *minstring, *maxstring, *totallength,
     *select[REDIS_SHARED_SELECT_CMDS],
     *integers[REDIS_SHARED_INTEGERS],
     *mbulkhdr[REDIS_SHARED_BULKHDR_LEN], /* "*<value>\r\n" */
@@ -1392,6 +1392,7 @@ void linsertCommand(redisClient *c);
 void lpopCommand(redisClient *c);
 void rpopCommand(redisClient *c);
 void llenCommand(redisClient *c);
+void ltlenCommand(redisClient *c);
 void lindexCommand(redisClient *c);
 void lrangeCommand(redisClient *c);
 void ltrimCommand(redisClient *c);
