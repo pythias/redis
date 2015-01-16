@@ -378,7 +378,8 @@ typedef long long mstime_t; /* millisecond time type. */
 #define REDIS_NOTIFY_ZSET (1<<7)        /* z */
 #define REDIS_NOTIFY_EXPIRED (1<<8)     /* x */
 #define REDIS_NOTIFY_EVICTED (1<<9)     /* e */
-#define REDIS_NOTIFY_ALL (REDIS_NOTIFY_GENERIC | REDIS_NOTIFY_STRING | REDIS_NOTIFY_LIST | REDIS_NOTIFY_SET | REDIS_NOTIFY_HASH | REDIS_NOTIFY_ZSET | REDIS_NOTIFY_EXPIRED | REDIS_NOTIFY_EVICTED)      /* A */
+#define REDIS_NOTIFY_QUEUE (1<<10)      /* q */
+#define REDIS_NOTIFY_ALL (REDIS_NOTIFY_GENERIC | REDIS_NOTIFY_STRING | REDIS_NOTIFY_LIST | REDIS_NOTIFY_SET | REDIS_NOTIFY_HASH | REDIS_NOTIFY_ZSET | REDIS_NOTIFY_EXPIRED | REDIS_NOTIFY_EVICTED | REDIS_NOTIFY_QUEUE)      /* A */
 
 /* Get the first bind addr or NULL */
 #define REDIS_BIND_ADDR (server.bindaddr_count ? server.bindaddr[0] : NULL)

@@ -996,6 +996,34 @@ int rewriteHashObject(rio *r, robj *key, robj *o) {
     return 1;
 }
 
+int rewriteQueueObject(rio *r, robj *key, robj *o) {
+    queue *queue = o->ptr;
+    queueEntry *qe = queueHead(queue);
+    long long count = 0, items = queueLength(queue);
+
+    while (1) {
+        robj *value = queueEntryValue(qe);
+
+        if (count == 0) {
+            int cmd_items = (items > REDIS_AOF_REWRITE_ITEMS_PER_CMD) ?
+                REDIS_AOF_REWRITE_ITEMS_PER_CMD : items;
+
+            if (rioWriteBulkCount(r, '*', 2 + cmd_items) == 0) return 0;
+            if (rioWriteBulkString(r, "QPUSH", 5) == 0) return 0;
+            if (rioWriteBulkObject(r, key) == 0) return 0;
+        }
+        if (rioWriteBulkObject(r, value) == 0) return 0;
+        if (++count == REDIS_AOF_REWRITE_ITEMS_PER_CMD) count = 0;
+        items--;
+
+        if ((qe = queueEntryNext(qe)) == NULL) {
+            break;
+        }
+    }
+
+    return 1;
+}
+
 /* This function is called by the child rewriting the AOF file to read
  * the difference accumulated from the parent into a buffer, that is
  * concatenated at the end of the rewrite. */
@@ -1089,8 +1117,7 @@ int rewriteAppendOnlyFile(char *filename) {
             } else if (o->type == REDIS_HASH) {
                 if (rewriteHashObject(&aof,&key,o) == 0) goto werr;
             } else if (o->type == REDIS_QUEUE) {
-                //TODO
-                //if (rewriteHashObject(&aof,&key,o) == 0) goto werr;
+                if (rewriteQueueObject(&aof,&key,o) == 0) goto werr;
             } else {
                 redisPanic("Unknown object type");
             }
